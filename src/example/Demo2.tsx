@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PosterWallControls, type PosterItem } from '../lib';
+import { PosterWallControls, useControlsContext, type PosterItem } from '../lib';
 import { WallMesh } from './WallMesh';
 import { PosterMesh } from './PosterMesh';
 
@@ -62,6 +62,75 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 4,
 };
 
+const navWrap: React.CSSProperties = {
+  position: 'fixed',
+  bottom: 24,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  display: 'flex',
+  gap: 8,
+  zIndex: 10000,
+};
+
+const navButton: React.CSSProperties = {
+  background: 'rgba(20,20,20,0.92)',
+  color: '#fff',
+  border: '1px solid rgba(255,255,255,0.22)',
+  borderRadius: 999,
+  padding: '10px 18px',
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontSize: 14,
+  fontWeight: 500,
+  cursor: 'pointer',
+  userSelect: 'none',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+  backdropFilter: 'blur(6px)',
+  minWidth: 96,
+};
+
+function PrevNextNav() {
+  const { state, items, enterItemFocus } = useControlsContext();
+  if (state.mode !== 'item' || !state.focusedItemId || items.length < 2) return null;
+  const idx = items.findIndex((i) => i.id === state.focusedItemId);
+  if (idx < 0) return null;
+  const n = items.length;
+  const prevId = items[(idx - 1 + n) % n].id;
+  const nextId = items[(idx + 1) % n].id;
+  const disabled = state.isTransitioning;
+  return (
+    <div style={navWrap}>
+      <button
+        type="button"
+        style={{ ...navButton, opacity: disabled ? 0.6 : 1 }}
+        disabled={disabled}
+        onClick={() => enterItemFocus(prevId)}
+      >
+        ‹ Prev
+      </button>
+      <span
+        style={{
+          alignSelf: 'center',
+          color: 'rgba(255,255,255,0.7)',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontSize: 12,
+          minWidth: 48,
+          textAlign: 'center',
+        }}
+      >
+        {idx + 1} / {n}
+      </span>
+      <button
+        type="button"
+        style={{ ...navButton, opacity: disabled ? 0.6 : 1 }}
+        disabled={disabled}
+        onClick={() => enterItemFocus(nextId)}
+      >
+        Next ›
+      </button>
+    </div>
+  );
+}
+
 export function Demo2() {
   const [count, setCount] = useState(2);
   const [gap, setGap] = useState(8);
@@ -104,6 +173,7 @@ export function Demo2() {
           </PosterWallControls.Scene>
         </Canvas>
         <PosterWallControls.HUD />
+        <PrevNextNav />
       </PosterWallControls>
 
       <div style={panelStyle}>
