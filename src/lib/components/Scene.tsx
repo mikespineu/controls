@@ -89,6 +89,7 @@ export function Scene({ children }: SceneProps) {
     targetRef.current.set(tx, ty, item.z2);
     camera.lookAt(targetRef.current);
     rt.meshRef.current.position.z = rt.restingZ + rt.wallOffset;
+    setState((s) => ({ ...s, lastGroupCamera: defaultSnapshot }));
     initialSnapDone.current = true;
   });
 
