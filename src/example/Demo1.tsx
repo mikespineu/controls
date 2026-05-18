@@ -64,7 +64,11 @@ const togglePanelStyle: React.CSSProperties = {
   userSelect: "none",
 };
 
-export function Demo1() {
+interface Demo1Props {
+  chromeVisible?: boolean;
+}
+
+export function Demo1({ chromeVisible = true }: Demo1Props) {
   const [disabled, setDisabled] = useState(false);
 
   return (
@@ -112,14 +116,16 @@ export function Demo1() {
         <PosterWallControls.HUD />
       </PosterWallControls>
 
-      <label style={togglePanelStyle}>
-        <input
-          type="checkbox"
-          checked={disabled}
-          onChange={(e) => setDisabled(e.target.checked)}
-        />
-        <span>Disabled (no input, auto-reset)</span>
-      </label>
+      {chromeVisible && (
+        <label style={togglePanelStyle}>
+          <input
+            type="checkbox"
+            checked={disabled}
+            onChange={(e) => setDisabled(e.target.checked)}
+          />
+          <span>Disabled (no input, auto-reset)</span>
+        </label>
+      )}
     </>
   );
 }

@@ -144,7 +144,11 @@ function PrevNextNav() {
   );
 }
 
-export function Demo2() {
+interface Demo2Props {
+  chromeVisible?: boolean;
+}
+
+export function Demo2({ chromeVisible = true }: Demo2Props) {
   const [count, setCount] = useState(2);
   const [gap, setGap] = useState(8);
   const initialMode = useMemo(() => detectInitialMode(), []);
@@ -195,6 +199,7 @@ export function Demo2() {
         <PrevNextNav />
       </PosterWallControls>
 
+      {chromeVisible && (
       <div style={panelStyle}>
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
           Demo 2 — Row builder
@@ -234,6 +239,7 @@ export function Demo2() {
           />
         </div>
       </div>
+      )}
     </>
   );
 }
