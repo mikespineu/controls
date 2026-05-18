@@ -1,6 +1,6 @@
-import React from 'react';
-import { Text } from '@react-three/drei';
-import type { PosterItem } from '../lib';
+import React from "react";
+import { Text } from "@react-three/drei";
+import type { PosterItem } from "../lib";
 
 interface PosterMeshProps {
   item: PosterItem;
@@ -19,7 +19,7 @@ export function PosterMesh({ item, color, label }: PosterMeshProps) {
         <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
       </mesh>
-      <mesh position={[0, 0, depth / 2 + 0.01]}>
+      <mesh position={[0, 0, depth / 2 + 0.07]}>
         <planeGeometry args={[width * 0.86, height * 0.86]} />
         <meshStandardMaterial color="#fafafa" roughness={0.4} />
       </mesh>

@@ -1,4 +1,4 @@
-import { Vector3, type PerspectiveCamera } from 'three';
+import type { Vector3, PerspectiveCamera } from 'three';
 import type { Margins, PosterItem } from '../types';
 import { DEG2RAD } from './constants';
 
@@ -71,6 +71,35 @@ export function computeItemSafeZ(
   const largest = Math.max(itemWidth, itemHeight);
   const dist = largest / 2 / Math.tan((fov / 2) * DEG2RAD);
   return itemZ2 + wallOffset + dist;
+}
+
+export interface ItemFramingFit {
+  safeZ: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+export function computeItemFramingFit(
+  itemWidth: number,
+  itemHeight: number,
+  fov: number,
+  aspect: number,
+  margins: Margins,
+  wallOffset: number,
+  itemZ2: number,
+): ItemFramingFit {
+  const paddedW = itemWidth + margins.left + margins.right;
+  const paddedH = itemHeight + margins.top + margins.bottom;
+  const vFov = fov * DEG2RAD;
+  const distForHeight = paddedH / 2 / Math.tan(vFov / 2);
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+  const distForWidth = paddedW / 2 / Math.tan(hFov / 2);
+  const dist = Math.max(distForHeight, distForWidth);
+  return {
+    safeZ: itemZ2 + wallOffset + dist,
+    offsetX: (margins.right - margins.left) / 2,
+    offsetY: (margins.top - margins.bottom) / 2,
+  };
 }
 
 export function computeGroupFitZ(

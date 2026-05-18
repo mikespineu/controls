@@ -9,7 +9,7 @@ import { usePointerInput } from '../hooks/usePointerInput';
 import { useCameraTransition } from '../hooks/useCameraTransition';
 import {
   computeGroupFitZ,
-  computeItemSafeZ,
+  computeItemFramingFit,
   makeSnapshot,
 } from '../utils/cameraMath';
 
@@ -75,10 +75,12 @@ export function Scene({ children }: SceneProps) {
       if (!target?.meshRef.current) return;
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
-      const safeZ = computeItemSafeZ(
+      const fit = computeItemFramingFit(
         target.width,
         target.height,
         config.fov,
+        aspect,
+        state.margins,
         target.wallOffset,
         item.z2,
       );
@@ -87,7 +89,10 @@ export function Scene({ children }: SceneProps) {
       const lastGroup = fromGroup
         ? makeSnapshot(camera.position, targetRef.current)
         : state.lastGroupCamera;
-      const newTarget = new Vector3(target.centerX, target.centerY, item.z2);
+      const tx = target.centerX + fit.offsetX;
+      const ty = target.centerY + fit.offsetY;
+      const newTarget = new Vector3(tx, ty, item.z2);
+      const camTo = new Vector3(tx, ty, fit.safeZ);
 
       if (fromGroup) {
         setState((s) => ({
@@ -102,7 +107,7 @@ export function Scene({ children }: SceneProps) {
           mesh: target.meshRef.current,
           target: targetRef.current,
           targetTo: newTarget,
-          camTo: new Vector3(target.centerX, target.centerY, safeZ),
+          camTo,
           meshZFrom: target.restingZ,
           meshZTo: target.restingZ + target.wallOffset,
           duration: config.transitionDuration,
@@ -124,7 +129,7 @@ export function Scene({ children }: SceneProps) {
           toMesh: target.meshRef.current,
           target: targetRef.current,
           targetTo: newTarget,
-          camTo: new Vector3(target.centerX, target.centerY, safeZ),
+          camTo,
           fromMeshZRest: fromRuntime.restingZ,
           toMeshZRest: target.restingZ,
           toMeshZTarget: target.restingZ + target.wallOffset,
@@ -143,12 +148,14 @@ export function Scene({ children }: SceneProps) {
       state.mode,
       state.focusedItemId,
       state.lastGroupCamera,
+      state.margins,
       transitions,
       items,
       config.fov,
       config.transitionDuration,
       config.transitionEase,
       camera,
+      aspect,
       itemRuntimes,
       setState,
     ],
