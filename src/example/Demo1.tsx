@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PosterWallControls, type PosterItem } from "../lib";
 import { WallMesh } from "./WallMesh";
@@ -45,44 +45,81 @@ const COLORS: Record<string, string> = {
   g: "#c8d058",
 };
 
-export function Demo1() {
-  return (
-    <PosterWallControls
-      items={ITEMS}
-      fov={45}
-      rotationLimitY={Infinity}
-      rotationLimitX={70}
-      marginTop={50}
-      marginRight={50}
-      marginBottom={50}
-      marginLeft={50}
-    >
-      <Canvas
-        camera={{ position: [0, 0, 200], fov: 45, near: 0.1, far: 5000 }}
-        gl={{ antialias: true }}
-      >
-        <color attach="background" args={["#0a0a0c"]} />
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[50, 80, 120]} intensity={0.8} />
-        <directionalLight position={[-100, -50, 100]} intensity={0.3} />
+const togglePanelStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 16,
+  left: 16,
+  padding: "10px 14px",
+  background: "rgba(15,15,18,0.85)",
+  border: "1px solid rgba(255,255,255,0.1)",
+  borderRadius: 10,
+  color: "#eaeaea",
+  fontFamily: "system-ui, -apple-system, sans-serif",
+  fontSize: 13,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  zIndex: 5,
+  backdropFilter: "blur(6px)",
+  userSelect: "none",
+};
 
-        <PosterWallControls.Scene>
-          <WallMesh width={260} height={180} />
-          {ITEMS.map((item) => (
-            <PosterWallControls.Item key={item.id} item={item}>
-              <PosterMesh
-                item={item}
-                color={COLORS[item.id] ?? "#ccc"}
-                label={item.id.toUpperCase()}
-              />
-              <PosterWallControls.ItemLabel
-                label={`Inspect ${item.id.toUpperCase()}`}
-              />
-            </PosterWallControls.Item>
-          ))}
-        </PosterWallControls.Scene>
-      </Canvas>
-      <PosterWallControls.HUD />
-    </PosterWallControls>
+export function Demo1() {
+  const [disabled, setDisabled] = useState(false);
+
+  return (
+    <>
+      <PosterWallControls
+        items={ITEMS}
+        fov={45}
+        rotationLimitY={Infinity}
+        rotationLimitX={70}
+        marginTop={50}
+        marginRight={50}
+        marginBottom={50}
+        marginLeft={50}
+        itemMarginTop={20}
+        itemMarginRight={20}
+        itemMarginBottom={20}
+        itemMarginLeft={20}
+        disabled={disabled}
+      >
+        <Canvas
+          camera={{ position: [0, 0, 200], fov: 45, near: 0.1, far: 5000 }}
+          gl={{ antialias: true }}
+        >
+          <color attach="background" args={["#0a0a0c"]} />
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[50, 80, 120]} intensity={0.8} />
+          <directionalLight position={[-100, -50, 100]} intensity={0.3} />
+
+          <PosterWallControls.Scene>
+            <WallMesh width={260} height={180} />
+            {ITEMS.map((item) => (
+              <PosterWallControls.Item key={item.id} item={item}>
+                <PosterMesh
+                  item={item}
+                  color={COLORS[item.id] ?? "#ccc"}
+                  label={item.id.toUpperCase()}
+                />
+                <PosterWallControls.ItemLabel
+                  label={`Inspect ${item.id.toUpperCase()}`}
+                />
+              </PosterWallControls.Item>
+            ))}
+          </PosterWallControls.Scene>
+        </Canvas>
+        <PosterWallControls.HUD />
+      </PosterWallControls>
+
+      <label style={togglePanelStyle}>
+        <input
+          type="checkbox"
+          checked={disabled}
+          onChange={(e) => setDisabled(e.target.checked)}
+        />
+        <span>Disabled (no input, auto-reset)</span>
+      </label>
+    </>
   );
 }

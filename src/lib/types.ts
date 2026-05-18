@@ -29,11 +29,14 @@ export interface ControlsState {
   focusedItemId: string | null;
   hasUserMoved: boolean;
   isAtDefaultZoom: boolean;
-  margins: Margins;
+  groupMargins: Margins;
+  itemMargins: Margins;
   isTransitioning: boolean;
   lastGroupCamera: CameraSnapshot;
   defaultGroupCamera: CameraSnapshot;
 }
+
+export type InitialMode = 'group' | `item-${number}`;
 
 export interface ControlsConfig {
   fov: number;
@@ -63,6 +66,10 @@ export interface PosterWallControlsProps {
   marginRight?: number;
   marginBottom?: number;
   marginLeft?: number;
+  itemMarginTop?: number;
+  itemMarginRight?: number;
+  itemMarginBottom?: number;
+  itemMarginLeft?: number;
   rotationLimitY?: number;
   rotationLimitX?: number;
   rotationSensitivity?: number;
@@ -73,6 +80,8 @@ export interface PosterWallControlsProps {
   exitEase?: string;
   resetDuration?: number;
   resetEase?: string;
+  initialMode?: InitialMode;
+  disabled?: boolean;
 }
 
 export interface ItemProps {

@@ -1,8 +1,21 @@
 import React, { useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PosterWallControls, useControlsContext, type PosterItem } from '../lib';
+import {
+  PosterWallControls,
+  useControlsContext,
+  type InitialMode,
+  type PosterItem,
+} from '../lib';
 import { WallMesh } from './WallMesh';
 import { PosterMesh } from './PosterMesh';
+
+function detectInitialMode(): InitialMode {
+  if (typeof window === 'undefined') return 'group';
+  const coarse =
+    window.matchMedia?.('(pointer: coarse)').matches ?? false;
+  const narrow = window.innerWidth < 768;
+  return coarse || narrow ? 'item-0' : 'group';
+}
 
 const POSTER_W = 32;
 const POSTER_H = 45;
@@ -134,6 +147,7 @@ function PrevNextNav() {
 export function Demo2() {
   const [count, setCount] = useState(2);
   const [gap, setGap] = useState(8);
+  const initialMode = useMemo(() => detectInitialMode(), []);
 
   const items = useMemo(() => buildRow(count, gap), [count, gap]);
 
@@ -148,6 +162,11 @@ export function Demo2() {
         marginRight={8}
         marginBottom={8}
         marginLeft={8}
+        itemMarginTop={10}
+        itemMarginRight={10}
+        itemMarginBottom={10}
+        itemMarginLeft={10}
+        initialMode={initialMode}
       >
         <Canvas
           camera={{ position: [0, 0, 200], fov: 45, near: 0.1, far: 5000 }}

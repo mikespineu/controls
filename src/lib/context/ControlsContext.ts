@@ -22,10 +22,12 @@ export interface ControlsInternal {
 
 export interface ControlsContextValue {
   state: ControlsState;
+  disabled: boolean;
   enterItemFocus: (itemId: string) => void;
   exitItemFocus: () => void;
   resetGroupCamera: () => void;
-  setMargins: (margins: Partial<Margins>) => void;
+  setGroupMargins: (margins: Partial<Margins>) => void;
+  setItemMargins: (margins: Partial<Margins>) => void;
   setHasUserMoved: (value: boolean) => void;
   setIsAtDefaultZoom: (value: boolean) => void;
   setIsTransitioning: (value: boolean) => void;

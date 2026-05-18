@@ -11,4 +11,5 @@ export type {
   ControlsConfig,
   CameraSnapshot,
   Margins,
+  InitialMode,
 } from './types';

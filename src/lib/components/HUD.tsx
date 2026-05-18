@@ -28,7 +28,9 @@ const wrapStyle: React.CSSProperties = {
 };
 
 export function HUD({ className }: HUDProps) {
-  const { state, exitItemFocus, resetGroupCamera } = useControlsContext();
+  const { state, exitItemFocus, resetGroupCamera, disabled: controlsDisabled } =
+    useControlsContext();
+  if (controlsDisabled) return null;
   const inItem = state.mode === 'item';
   const showReset = state.mode === 'group' && state.hasUserMoved;
   const disabled = state.isTransitioning;

@@ -5,16 +5,18 @@ import { useItemRuntime } from './Item';
 import type { ItemLabelProps } from '../types';
 
 export function ItemLabel({ label, className }: ItemLabelProps) {
-  const { enterItemFocus, state } = useControlsContext();
+  const { enterItemFocus, state, disabled: controlsDisabled } = useControlsContext();
   const runtime = useItemRuntime();
   const isFocused = state.focusedItemId === runtime.id && state.mode === 'item';
-  const disabled = state.isTransitioning || isFocused;
+  const disabled = state.isTransitioning || isFocused || controlsDisabled;
 
   const onClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled) return;
     enterItemFocus(runtime.id);
   };
+
+  if (controlsDisabled) return null;
 
   const baseStyle: React.CSSProperties = {
     pointerEvents: 'auto',

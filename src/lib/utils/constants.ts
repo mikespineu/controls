@@ -20,6 +20,10 @@ export const DEFAULTS = {
   marginRight: 0,
   marginBottom: 0,
   marginLeft: 0,
+  itemMarginTop: 0,
+  itemMarginRight: 0,
+  itemMarginBottom: 0,
+  itemMarginLeft: 0,
 } as const;
 
 export const GSAP_MISSING_ERROR =

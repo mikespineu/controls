@@ -19,7 +19,7 @@ interface SceneProps {
 
 export function Scene({ children }: SceneProps) {
   const ctx = useControlsContext();
-  const { state, config, items, _internal } = ctx;
+  const { state, disabled, config, items, _internal } = ctx;
   const { setState, controllerRef, itemRuntimes } = _internal;
 
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
@@ -31,8 +31,8 @@ export function Scene({ children }: SceneProps) {
 
   const aspect = size.width / Math.max(1, size.height);
   const defaultGroupZ = useMemo(
-    () => computeGroupFitZ(bbox, config.fov, aspect, state.margins),
-    [bbox, config.fov, aspect, state.margins],
+    () => computeGroupFitZ(bbox, config.fov, aspect, state.groupMargins),
+    [bbox, config.fov, aspect, state.groupMargins],
   );
 
   const minZoom = config.minZoom ?? defaultGroupZ * 0.25;
@@ -64,11 +64,64 @@ export function Scene({ children }: SceneProps) {
     camera.updateProjectionMatrix();
   }, [camera, config.fov]);
 
-  const pointer = usePointerInput(true);
+  const initialSnapDone = useRef(false);
+  useEffect(() => {
+    if (initialSnapDone.current) return;
+    if (state.mode !== 'item' || !state.focusedItemId) {
+      initialSnapDone.current = true;
+      return;
+    }
+    const rt = itemRuntimes.current.get(state.focusedItemId);
+    const item = items.find((i) => i.id === state.focusedItemId);
+    if (!rt?.meshRef.current || !item) return;
+    const fit = computeItemFramingFit(
+      rt.width,
+      rt.height,
+      config.fov,
+      aspect,
+      state.itemMargins,
+      rt.wallOffset,
+      item.z2,
+    );
+    const tx = rt.centerX + fit.offsetX;
+    const ty = rt.centerY + fit.offsetY;
+    camera.position.set(tx, ty, fit.safeZ);
+    targetRef.current.set(tx, ty, item.z2);
+    camera.lookAt(targetRef.current);
+    rt.meshRef.current.position.z = rt.restingZ + rt.wallOffset;
+    initialSnapDone.current = true;
+  });
+
+  const prevDisabledRef = useRef(disabled);
+  useEffect(() => {
+    const prev = prevDisabledRef.current;
+    prevDisabledRef.current = disabled;
+    if (!disabled || prev === disabled) return;
+    for (const rt of itemRuntimes.current.values()) {
+      if (rt.meshRef.current) {
+        rt.meshRef.current.rotation.set(0, 0, 0);
+        rt.meshRef.current.position.z = rt.restingZ;
+      }
+    }
+    camera.position.copy(state.defaultGroupCamera.position);
+    targetRef.current.copy(state.defaultGroupCamera.target);
+    camera.lookAt(targetRef.current);
+    setState((s) => ({
+      ...s,
+      mode: 'group',
+      focusedItemId: null,
+      hasUserMoved: false,
+      isAtDefaultZoom: true,
+      isTransitioning: false,
+    }));
+  }, [disabled, camera, itemRuntimes, state.defaultGroupCamera, setState]);
+
+  const pointer = usePointerInput(!disabled);
   const transitions = useCameraTransition();
 
   const enterItemFocus = useCallback(
     (itemId: string) => {
+      if (disabled) return;
       if (state.isTransitioning) return;
       if (!transitions.ready) return;
       const target = itemRuntimes.current.get(itemId);
@@ -80,7 +133,7 @@ export function Scene({ children }: SceneProps) {
         target.height,
         config.fov,
         aspect,
-        state.margins,
+        state.itemMargins,
         target.wallOffset,
         item.z2,
       );
@@ -144,11 +197,12 @@ export function Scene({ children }: SceneProps) {
       }
     },
     [
+      disabled,
       state.isTransitioning,
       state.mode,
       state.focusedItemId,
       state.lastGroupCamera,
-      state.margins,
+      state.itemMargins,
       transitions,
       items,
       config.fov,
@@ -162,6 +216,7 @@ export function Scene({ children }: SceneProps) {
   );
 
   const exitItemFocus = useCallback(() => {
+    if (disabled) return;
     if (state.mode !== 'item' || !state.focusedItemId) return;
     if (state.isTransitioning) return;
     if (!transitions.ready) return;
@@ -189,6 +244,7 @@ export function Scene({ children }: SceneProps) {
       },
     });
   }, [
+    disabled,
     state.mode,
     state.focusedItemId,
     state.isTransitioning,
@@ -202,6 +258,7 @@ export function Scene({ children }: SceneProps) {
   ]);
 
   const resetGroupCamera = useCallback(() => {
+    if (disabled) return;
     if (state.isTransitioning) return;
     if (!transitions.ready) return;
     setState((s) => ({ ...s, isTransitioning: true }));
@@ -221,6 +278,7 @@ export function Scene({ children }: SceneProps) {
       },
     });
   }, [
+    disabled,
     state.isTransitioning,
     state.defaultGroupCamera,
     transitions,

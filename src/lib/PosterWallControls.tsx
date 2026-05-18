@@ -9,8 +9,10 @@ import { DEFAULTS } from './utils/constants';
 import type {
   ControlsConfig,
   ControlsState,
+  InitialMode,
   ItemRuntime,
   Margins,
+  PosterItem,
   PosterWallControlsProps,
 } from './types';
 import { Scene } from './components/Scene';
@@ -20,6 +22,20 @@ import { HUD } from './components/HUD';
 
 function makeDefaultSnapshot() {
   return { position: new Vector3(), target: new Vector3() };
+}
+
+function parseInitialMode(
+  mode: InitialMode | undefined,
+  items: PosterItem[],
+): { mode: 'group' | 'item'; focusedItemId: string | null } {
+  if (!mode || mode === 'group') return { mode: 'group', focusedItemId: null };
+  if (typeof mode === 'string' && mode.startsWith('item-')) {
+    const n = Number.parseInt(mode.slice(5), 10);
+    if (Number.isFinite(n) && n >= 0 && n < items.length) {
+      return { mode: 'item', focusedItemId: items[n].id };
+    }
+  }
+  return { mode: 'group', focusedItemId: null };
 }
 
 function PosterWallControlsRoot(props: PosterWallControlsProps) {
@@ -58,7 +74,7 @@ function PosterWallControlsRoot(props: PosterWallControlsProps) {
     ],
   );
 
-  const initialMargins: Margins = useMemo(
+  const groupMargins: Margins = useMemo(
     () => ({
       top: props.marginTop ?? DEFAULTS.marginTop,
       right: props.marginRight ?? DEFAULTS.marginRight,
@@ -68,20 +84,43 @@ function PosterWallControlsRoot(props: PosterWallControlsProps) {
     [props.marginTop, props.marginRight, props.marginBottom, props.marginLeft],
   );
 
-  const [state, setState] = useState<ControlsState>(() => ({
-    mode: 'group',
-    focusedItemId: null,
-    hasUserMoved: false,
-    isAtDefaultZoom: true,
-    margins: initialMargins,
-    isTransitioning: false,
-    lastGroupCamera: makeDefaultSnapshot(),
-    defaultGroupCamera: makeDefaultSnapshot(),
-  }));
+  const itemMargins: Margins = useMemo(
+    () => ({
+      top: props.itemMarginTop ?? DEFAULTS.itemMarginTop,
+      right: props.itemMarginRight ?? DEFAULTS.itemMarginRight,
+      bottom: props.itemMarginBottom ?? DEFAULTS.itemMarginBottom,
+      left: props.itemMarginLeft ?? DEFAULTS.itemMarginLeft,
+    }),
+    [
+      props.itemMarginTop,
+      props.itemMarginRight,
+      props.itemMarginBottom,
+      props.itemMarginLeft,
+    ],
+  );
+
+  const [state, setState] = useState<ControlsState>(() => {
+    const init = parseInitialMode(props.initialMode, props.items);
+    return {
+      mode: init.mode,
+      focusedItemId: init.focusedItemId,
+      hasUserMoved: false,
+      isAtDefaultZoom: true,
+      groupMargins,
+      itemMargins,
+      isTransitioning: false,
+      lastGroupCamera: makeDefaultSnapshot(),
+      defaultGroupCamera: makeDefaultSnapshot(),
+    };
+  });
 
   React.useEffect(() => {
-    setState((s) => ({ ...s, margins: initialMargins }));
-  }, [initialMargins]);
+    setState((s) => ({ ...s, groupMargins }));
+  }, [groupMargins]);
+
+  React.useEffect(() => {
+    setState((s) => ({ ...s, itemMargins }));
+  }, [itemMargins]);
 
   const controllerRef = useRef<Controller | null>(null);
   const itemRuntimes = useRef<Map<string, ItemRuntime>>(new Map());
@@ -125,17 +164,24 @@ function PosterWallControlsRoot(props: PosterWallControlsProps) {
       setState((s) => (s.isTransitioning === v ? s : { ...s, isTransitioning: v })),
     [],
   );
-  const setMargins = useCallback((m: Partial<Margins>) => {
-    setState((s) => ({ ...s, margins: { ...s.margins, ...m } }));
+  const setGroupMargins = useCallback((m: Partial<Margins>) => {
+    setState((s) => ({ ...s, groupMargins: { ...s.groupMargins, ...m } }));
   }, []);
+  const setItemMargins = useCallback((m: Partial<Margins>) => {
+    setState((s) => ({ ...s, itemMargins: { ...s.itemMargins, ...m } }));
+  }, []);
+
+  const disabled = !!props.disabled;
 
   const ctx: ControlsContextValue = useMemo(
     () => ({
       state,
+      disabled,
       enterItemFocus,
       exitItemFocus,
       resetGroupCamera,
-      setMargins,
+      setGroupMargins,
+      setItemMargins,
       setHasUserMoved,
       setIsAtDefaultZoom,
       setIsTransitioning,
@@ -148,10 +194,12 @@ function PosterWallControlsRoot(props: PosterWallControlsProps) {
     }),
     [
       state,
+      disabled,
       enterItemFocus,
       exitItemFocus,
       resetGroupCamera,
-      setMargins,
+      setGroupMargins,
+      setItemMargins,
       setHasUserMoved,
       setIsAtDefaultZoom,
       setIsTransitioning,
