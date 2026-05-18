@@ -1,80 +1,52 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
-import { PosterWallControls, type PosterItem } from '../lib';
-import { WallMesh } from './WallMesh';
-import { PosterMesh } from './PosterMesh';
-import { Overlay } from './Overlay';
+import React, { useState } from 'react';
+import { Demo1 } from './Demo1';
+import { Demo2 } from './Demo2';
 
-const POSTER_DEPTH = 1;
-const WALL_Z = 0;
+type DemoKey = 'demo1' | 'demo2';
 
-function makePoster(id: string, x: number, y: number, w: number, h: number): PosterItem {
-  return {
-    id,
-    x1: x - w / 2,
-    x2: x + w / 2,
-    y1: y - h / 2,
-    y2: y + h / 2,
-    z1: WALL_Z,
-    z2: WALL_Z + POSTER_DEPTH,
-  };
-}
-
-const ITEMS: PosterItem[] = [
-  makePoster('a', -70, 35, 32, 45),
-  makePoster('b', -25, 35, 45, 32),
-  makePoster('c', 30, 40, 48, 67.5),
-  makePoster('d', 80, 30, 32, 45),
-  makePoster('e', -55, -30, 67.5, 48),
-  makePoster('f', 25, -30, 32, 45),
-  makePoster('g', 75, -25, 45, 32),
-];
-
-const COLORS: Record<string, string> = {
-  a: '#e26d5c',
-  b: '#f3a738',
-  c: '#5fb49c',
-  d: '#7884d1',
-  e: '#d36b9b',
-  f: '#67c0e3',
-  g: '#c8d058',
+const switcherStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: 16,
+  left: '50%',
+  transform: 'translateX(-50%)',
+  display: 'flex',
+  gap: 4,
+  padding: 4,
+  background: 'rgba(15,15,18,0.9)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: 10,
+  zIndex: 50,
+  backdropFilter: 'blur(6px)',
 };
 
+const tabStyle = (active: boolean): React.CSSProperties => ({
+  padding: '8px 14px',
+  background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+  color: active ? '#fff' : 'rgba(255,255,255,0.6)',
+  border: 'none',
+  borderRadius: 6,
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontSize: 13,
+  fontWeight: 500,
+  cursor: 'pointer',
+});
+
 export function App() {
+  const [demo, setDemo] = useState<DemoKey>('demo1');
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <PosterWallControls
-        items={ITEMS}
-        fov={45}
-        rotationLimitY={Infinity}
-        rotationLimitX={70}
-        marginTop={5}
-        marginRight={5}
-        marginBottom={5}
-        marginLeft={5}
-      >
-        <Canvas
-          camera={{ position: [0, 0, 200], fov: 45, near: 0.1, far: 5000 }}
-          gl={{ antialias: true }}
-        >
-          <color attach="background" args={['#0a0a0c']} />
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[50, 80, 120]} intensity={0.8} />
-          <directionalLight position={[-100, -50, 100]} intensity={0.3} />
+      {demo === 'demo1' && <Demo1 />}
+      {demo === 'demo2' && <Demo2 />}
 
-          <PosterWallControls.Scene>
-            <WallMesh width={260} height={180} />
-            {ITEMS.map((item) => (
-              <PosterWallControls.Item key={item.id} item={item}>
-                <PosterMesh item={item} color={COLORS[item.id] ?? '#ccc'} label={item.id.toUpperCase()} />
-                <PosterWallControls.ItemLabel label={`Inspect ${item.id.toUpperCase()}`} />
-              </PosterWallControls.Item>
-            ))}
-          </PosterWallControls.Scene>
-        </Canvas>
-        <PosterWallControls.HUD />
-      </PosterWallControls>
-      <Overlay />
+      <div style={switcherStyle}>
+        <button style={tabStyle(demo === 'demo1')} onClick={() => setDemo('demo1')}>
+          Demo 1 — Static wall
+        </button>
+        <button style={tabStyle(demo === 'demo2')} onClick={() => setDemo('demo2')}>
+          Demo 2 — Sliders
+        </button>
+      </div>
     </div>
   );
 }
