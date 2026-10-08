@@ -2,6 +2,8 @@
 
 Custom React Three Fiber controls for a poster wall. Pan and zoom the wall, then click a poster to rotate it. This is not OrbitControls.
 
+**[Live demo](https://mikespineu.github.io/poster-wall-controls/)**
+
 ![Pan the wall, zoom in, focus a poster, rotate it, then go back](docs/demo.gif)
 
 ## Install
