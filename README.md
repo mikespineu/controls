@@ -1,20 +1,21 @@
 # poster-wall-controls
 
-Custom React Three Fiber camera controls for interactive poster wall planners.
+Custom React Three Fiber controls for a poster wall. Pan and zoom the wall, then click a poster to rotate it. This is not OrbitControls.
 
-Compound-component API. **No OrbitControls / CameraControls / drei controls** — every gesture, every frame is implemented from scratch.
+![Pan the wall, zoom in, focus a poster, rotate it, then go back](docs/demo.gif)
 
 ## Install
 
 ```bash
 npm install poster-wall-controls @react-three/fiber @react-three/drei three react react-dom
-# gsap is an optional peer dependency; required at runtime for transitions:
 npm install gsap
 ```
 
-Make sure `three` is deduped in your bundler — multiple Three.js copies break R3F.
+`gsap` is required for focus transitions. Deduplicate `three` in your bundler — a second copy breaks React Three Fiber.
 
 ## Quick start
+
+1 world unit = 1 cm.
 
 ```tsx
 import { Canvas } from '@react-three/fiber';
@@ -50,7 +51,23 @@ function MyWall() {
 }
 ```
 
-## Run the example
+## How to use it
+
+**Group** — the whole wall. This is the default.
+
+- Middle-click drag, right-click drag, or a two-finger drag pans the wall.
+- Scroll wheel or pinch zooms.
+- Vertical pan stays locked until you zoom in.
+- Reset appears in the HUD after you move.
+
+**Item** — one poster.
+
+- Click a poster's label to focus it. The poster eases forward.
+- Drag to rotate that poster. The camera stays put.
+- Back leaves item focus.
+- Click another label to switch posters without going back to the wall first.
+
+## Try the example
 
 ```bash
 npm install
@@ -59,16 +76,16 @@ npm run dev
 
 Opens `http://localhost:5173` with a demo wall of seven posters.
 
-## Mode reference
+## Reference
+
+### Modes
 
 | Mode  | Camera                                    | Gesture surface              |
 |-------|-------------------------------------------|------------------------------|
 | group | Looks at centroid of all items (default)  | pan + zoom over the wall     |
 | item  | Locked to one poster's center             | rotate the poster mesh only  |
 
-Transition: click an `ItemLabel` to enter item focus; HUD "Back" button to exit.
-
-## Root props — `<PosterWallControls>`
+### Root props — `<PosterWallControls>`
 
 | Prop                  | Default        | Notes                                          |
 |-----------------------|----------------|------------------------------------------------|
@@ -76,26 +93,24 @@ Transition: click an `ItemLabel` to enter item focus; HUD "Back" button to exit.
 | `fov`                 | `45`           | Perspective FOV in degrees.                    |
 | `minZoom` / `maxZoom` | auto           | Camera Z bounds for group mode.                |
 | `zoomSpeed`           | `1`            | Wheel multiplier.                              |
-| `marginTop/Right/Bottom/Left` | `0`    | cm of padding around bbox (negative allowed).  |
+| `marginTop/Right/Bottom/Left` | `0`    | cm of padding around the bbox. Negative values are allowed. |
 | `rotationLimitY`      | `Infinity`     | Item-focus Y rotation cap (degrees).           |
 | `rotationLimitX`      | `80`           | Item-focus X rotation cap (degrees).           |
 | `rotationSensitivity` | `0.005`        | Radians per pixel.                             |
-| `rotationClearance`   | `2`            | cm clearance for auto `wallOffset`.            |
-| `transitionDuration`  | `600`          | ms — enter item focus.                         |
+| `rotationClearance`   | `2`            | cm clearance used by auto `wallOffset`.        |
+| `transitionDuration`  | `600`          | ms to enter item focus.                        |
 | `transitionEase`      | `power2.inOut` | GSAP ease.                                     |
-| `exitDuration` / `exitEase`   | same   | exit item focus.                               |
-| `resetDuration` / `resetEase` | same   | reset to default group camera.                 |
+| `exitDuration` / `exitEase`   | same   | Leave item focus.                              |
+| `resetDuration` / `resetEase` | same   | Return to the default group camera.            |
 
-## `<PosterWallControls.Item>` props
+### `<PosterWallControls.Item>` props
 
 | Prop          | Default | Notes                                            |
 |---------------|---------|--------------------------------------------------|
 | `item`        | —       | `PosterItem` whose runtime is registered.        |
-| `wallOffset`  | auto    | cm Z-pullout in item focus. Auto: `depth/2 + rotationClearance`. |
+| `wallOffset`  | auto    | cm the poster moves forward in item focus. Auto: `depth / 2 + rotationClearance`. |
 
-## Poster size reference
-
-1 world unit = 1 cm.
+### Poster sizes
 
 | Name         | Width (cm) | Height (cm) |
 |--------------|-----------|------------|
@@ -104,9 +119,9 @@ Transition: click an `ItemLabel` to enter item focus; HUD "Back" button to exit.
 | L vertical   | 48        | 67.5       |
 | L horizontal | 67.5      | 48         |
 
-Use `vertical` / `horizontal` everywhere — never `portrait` / `landscape`.
+Use `vertical` / `horizontal`. Do not use `portrait` / `landscape`.
 
-## Margin system
+### Margins
 
 ```
               marginTop
@@ -118,82 +133,57 @@ marginLeft   posters     marginRight
               marginBottom
 ```
 
-Camera Z in group mode is recomputed from the bbox + margins so the padded
-content fits the viewport. Negative margins zoom in past the bbox edge.
+In group mode the camera Z is recomputed from the bounding box plus margins so the padded wall fits the viewport. Negative margins zoom in past the box edge.
 
-## wallOffset — auto vs manual
+### wallOffset
 
-In item focus the poster is animated Z-forward by `wallOffset` so its rotated
-corners do not clip into the wall.
+In item focus the poster moves forward on Z by `wallOffset`, so rotated corners do not clip the wall.
 
 - Explicit: `<PosterWallControls.Item wallOffset={5}>` (cm)
 - Auto: `posterDepth / 2 + rotationClearance` (`rotationClearance` defaults to 2)
 
-The mesh returns to its resting Z on exit. Rotation also resets to `(0, 0, 0)`.
+On exit the mesh returns to its resting Z and rotation resets to `(0, 0, 0)`.
 
-## Pan limits and Y-lock
+### Pan limits
 
-Pan is clamped so the visible frustum always intersects the combined bbox of
-all items — at least one poster stays partially visible.
+Pan is clamped so the view always overlaps the combined bounding box of all items. At least one poster stays partly visible.
 
-At default zoom (camera Z within `ZOOM_EPSILON` = 0.5 of default), Y pan is
-discarded. This keeps mobile vertical-scroll handoff intact. Zoom in even
-slightly and Y pan unlocks.
+At the default zoom (camera Z within 0.5 of the fitted distance), vertical pan is ignored so a page can still scroll. Zoom in and vertical pan unlocks.
 
-## Item → item focus transition
+### Switching posters
 
-Click another poster's focus icon while already focused. A single GSAP
-timeline:
+Click another poster's label while one is already focused. One GSAP timeline:
 
-1. Current poster rotation → `(0,0,0)`
-2. Current poster Z → resting Z
-3. Camera → new poster center + safeZ (overlaps step 2)
-4. New poster Z → resting Z + wallOffset (stagger after step 3)
+1. Current poster rotation returns to `(0, 0, 0)`.
+2. Current poster Z returns to its resting Z.
+3. Camera moves to the new poster center (overlaps step 2).
+4. New poster Z moves to resting Z plus `wallOffset`.
 
-`focusedItemId` updates immediately; HUD Back button stays visible; mode
-remains `'item'`; clicks blocked during the transition.
+`focusedItemId` updates immediately. Back stays visible, mode stays `'item'`, and clicks are blocked until the timeline finishes.
 
-## Why custom controls — no OrbitControls
+### Why these controls are custom
 
-Generic controls impose interaction assumptions that fight this spec:
+Group mode is a flat pan and zoom along Z, not an orbit around a target. Vertical pan locks at the default zoom. Item focus rotates the mesh, not the camera. Touch has to mean pan, pinch, or rotate depending on the mode. OrbitControls cannot express that, so input is handled with pointer events and `useFrame`.
 
-- OrbitControls orbits around a target — here, group mode is a flat
-  pan + zoom along the Z axis, never an orbit.
-- The Y-axis lock at default zoom is not an OrbitControls feature.
-- Item focus rotates the mesh, not the camera — completely outside the
-  OrbitControls model.
-- Touch handling (pan vs pinch vs single-finger rotate) must be re-mapped
-  per mode, which OrbitControls cannot do.
+### Compound components
 
-Custom code on raw pointer events + `useFrame` gives total control with no
-hidden state.
+`<PosterWallControls>` keeps state in one React context. `Scene`, `Item`, `ItemLabel`, and `HUD` read and write that context through `useControlsContext()`. They are static properties on the root, so you compose them as a tree instead of passing render props.
 
-## Compound Components — how the pattern is used internally
+### GSAP
 
-`<PosterWallControls>` owns all state through a single React Context
-(`ControlsContext`). Every sub-component (`Scene`, `Item`, `ItemLabel`, `HUD`)
-reads from and writes to that context via `useControlsContext()` — there is
-no prop drilling and no monolithic root prop API. Sub-components are attached
-as static properties on the root component so consumers compose the API as a
-tree.
-
-## GSAP integration
-
-GSAP is an optional peer dependency (`>= 3.12`). It is dynamically imported
-on first use; without it, transitions throw:
+GSAP (`>= 3.12`) is an optional peer dependency, loaded on first use. Without it, transitions throw:
 
 > `[PosterWallControls] GSAP peer dependency not found. Install gsap >= 3.12.`
 
-All durations / eases are forwarded to `gsap.to()` / timelines verbatim.
+Durations and eases are passed through to `gsap.to()` and timelines as given.
 
 ## Contributing
 
 ```bash
 npm install
-npm run dev        # run the example app
+npm run dev        # example app
 npm run typecheck  # tsc --noEmit
 npm run build      # tsup ESM + CJS
 ```
 
-Issues and PRs welcome. New behaviour must remain compound-component-shaped
-and must never reach for a pre-built controls package.
+Issues and PRs are welcome. New behaviour stays in the compound-component API and does not add a pre-built controls package.
