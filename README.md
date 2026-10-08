@@ -2,7 +2,7 @@
 
 Custom React Three Fiber camera controls for interactive poster wall planners.
 
-**[Live demo](https://mikespineu.github.io/controls/)**
+**[Live demo](https://mikespineu.github.io/poster-wall-controls/)**
 
 Compound-component API. **No OrbitControls / CameraControls / drei controls** — every gesture, every frame is implemented from scratch.
 
