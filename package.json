@@ -1,6 +1,6 @@
 {
   "name": "poster-wall-controls",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "description": "Custom React Three Fiber camera controls for interactive poster wall planners.",
   "type": "module",
   "main": "dist/index.cjs",
@@ -22,7 +22,8 @@
     "build": "tsup",
     "build:example": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm run build"
   },
   "peerDependencies": {
     "@react-three/drei": ">=9",
@@ -60,5 +61,16 @@
     "poster",
     "wall"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikespineu/poster-wall-controls.git"
+  },
+  "homepage": "https://mikespineu.github.io/poster-wall-controls/",
+  "bugs": {
+    "url": "https://github.com/mikespineu/poster-wall-controls/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
