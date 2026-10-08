@@ -12,6 +12,7 @@ export function PosterMesh({ item, color, label }: PosterMeshProps) {
   const width = Math.abs(item.x2 - item.x1);
   const height = Math.abs(item.y2 - item.y1);
   const depth = Math.abs(item.z2 - item.z1);
+  const faceZ = depth / 2;
 
   return (
     <group>
@@ -19,16 +20,24 @@ export function PosterMesh({ item, color, label }: PosterMeshProps) {
         <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial color={color} roughness={0.55} metalness={0.05} />
       </mesh>
-      <mesh position={[0, 0, depth / 2 + 0.07]}>
+      <mesh position={[0, 0, faceZ]} renderOrder={1}>
         <planeGeometry args={[width * 0.86, height * 0.86]} />
-        <meshStandardMaterial color="#fafafa" roughness={0.4} />
+        <meshStandardMaterial
+          color="#fafafa"
+          roughness={0.4}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
       </mesh>
       <Text
-        position={[0, 0, depth / 2 + 0.05]}
+        position={[0, 0, faceZ]}
         fontSize={Math.min(width, height) * 0.32}
         color={color}
         anchorX="center"
         anchorY="middle"
+        depthOffset={-4}
+        renderOrder={2}
       >
         {label}
       </Text>
